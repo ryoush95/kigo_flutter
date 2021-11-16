@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'Setting.dart';
+
 class Webview extends StatefulWidget {
   const Webview({Key? key}) : super(key: key);
 
@@ -24,30 +26,70 @@ class _WebviewState extends State<Webview> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        var future = _controller.canGoBack();
+        Future future = _controller.canGoBack();
         future.then((canGoBack) {
           if (canGoBack) {
             _controller.goBack();
           } else {
             showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                      title: Text("앱을 종료하시겠습니까?"),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () => SystemNavigator.pop(),
-                          child: Text("네"),
-                        ),
-                        TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text("아니요"))
-                      ],
-                    ));
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text("앱을 종료하시겠습니까?"),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => SystemNavigator.pop(),
+                    child: Text("네"),
+                  ),
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text("아니요"))
+                ],
+              ),
+            );
           }
         });
         return Future.value(false);
       },
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Setting()),
+            );
+          },
+          child: Icon(
+            Icons.settings,
+            color: Colors.white,
+          ),
+        ),
+        // appBar: AppBar(
+        //   backgroundColor: Colors.white,
+        //   elevation: 0.0,
+        //   leading: IconButton(
+        //     onPressed: () {
+        //       Future future = _controller.canGoBack();
+        //       future.then((canGoBack) {
+        //         if (canGoBack) {
+        //           _controller.goBack();
+        //         } else {
+        //           print('fail');
+        //         }
+        //       });
+        //     },
+        //     icon: Icon(Icons.arrow_back),
+        //     color: Colors.black,
+        //   ),
+        //   actions: [
+        //     IconButton(
+        //       onPressed: () {
+        //         print('2222');
+        //       },
+        //       icon: Icon(Icons.settings),
+        //       color: Colors.black,
+        //     ),
+        //   ],
+        // ),
         body: SafeArea(
           child: WebView(
             onWebViewCreated: (WebViewController webViewController) {
