@@ -12,14 +12,15 @@ class Setting extends StatefulWidget {
 
 class _SettingState extends State<Setting> {
   FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
+  bool ch1 = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     var initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     var initializationSettingsIOS = IOSInitializationSettings();
 
     var initializationSettings = InitializationSettings(
@@ -27,12 +28,9 @@ class _SettingState extends State<Setting> {
 
     _flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: (String? payload) async {
-          debugPrint("$payload");
-          showDialog(
-              context: context,
-              builder: (_) => Webview()
-          );
-        });
+      debugPrint("$payload");
+      showDialog(context: context, builder: (_) => MyWebview());
+    });
   }
 
   @override
@@ -53,21 +51,33 @@ class _SettingState extends State<Setting> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(onPressed: () {
-                _showNotification();
-              }, child: Text('notification'))
+              ElevatedButton(
+                onPressed: () {
+                  _showNotification();
+                },
+                child: Text('notification'),
+              ),
+              Switch(value: ch1, onChanged: (bool value) {
+                setState(() {
+                  ch1 = value;
+                  if (value == true) {
+                    _showNotification();
+                  }
+                });
+              },
+
+              )
             ],
           ),
         ),
       ),
     );
   }
+
   Future<void> _showNotification() async {
     var android = AndroidNotificationDetails(
         'your channel id', 'your channel name', 'channel description',
-        playSound: true,
-        importance: Importance.max,
-        priority: Priority.high);
+        playSound: true, importance: Importance.max, priority: Priority.high);
 
     var ios = IOSNotificationDetails();
     var detail = NotificationDetails(android: android, iOS: ios);
