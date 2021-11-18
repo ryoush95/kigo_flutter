@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>867738297639-qs9fmeiv43geass7egs4mq3jglqi7d5b.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.867738297639-qs9fmeiv43geass7egs4mq3jglqi7d5b</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>867738297639-67d2riaeatnvo33fl11ie34d2blgfiri.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAVbeEMXCt-lGR22Fi60KK3paJfPapnQ2U</string>
+	<key>GCM_SENDER_ID</key>
+	<string>867738297639</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.sogeum.kigoFlutter</string>
+	<key>PROJECT_ID</key>
+	<string>kigo-webview</string>
+	<key>STORAGE_BUCKET</key>
+	<string>kigo-webview.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:867738297639:ios:e51bf92af42c93c6ae3502</string>
+</dict>
+</plist>

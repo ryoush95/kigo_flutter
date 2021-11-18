@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:867738297639:android:ad580e6dacff7f67ae3502",
+        "mobilesdk_app_id": "1:867738297639:android:8e2c475326eecd03ae3502",
         "android_client_info": {
-          "package_name": "com.example.kigo_flutter"
+          "package_name": "com.sogeum.kigo_flutter"
         }
       },
       "oauth_client": [
         {
-          "client_id": "867738297639-rurj60pmvbsi2rggcald24oapjacc321.apps.googleusercontent.com",
+          "client_id": "867738297639-67d2riaeatnvo33fl11ie34d2blgfiri.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.kigo_flutter",
+            "package_name": "com.sogeum.kigo_flutter",
             "certificate_hash": "24eca107fee46f35e07259c0505fc82c673b1b3a"
           }
         },
@@ -37,6 +37,13 @@
             {
               "client_id": "867738297639-inpgdv03v7oe3sojtmp8bh05ob6fetma.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "867738297639-4fu0nel9rtuh67aqido2e2216q9410pe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.kigoFlutter"
+              }
             }
           ]
         }
