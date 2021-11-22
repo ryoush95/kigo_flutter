@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-
-import 'Setting.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Webview extends StatefulWidget {
   const Webview({Key? key}) : super(key: key);
@@ -15,11 +13,44 @@ class Webview extends StatefulWidget {
 
 class _WebviewState extends State<Webview> {
   late WebViewController _controller;
+  var permissionState = false;
+
+  Future<bool> requestCameraPermission(BuildContext context) async {
+    // PermissionStatus status = await Permission.storage.request();
+    Map<Permission, PermissionStatus> statuses =
+    await [Permission.camera, Permission.storage].request();
+    // var status = await requestCameraPermission(context);
+
+    if (statuses[Permission.camera]!.isGranted == false ||
+    statuses[Permission.storage]!.isGranted == false) {
+      // 허용이 안된 경우
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              content: Text("권한 설정을 확인해주세요."),
+              actions: [
+                ElevatedButton(
+                    onPressed: () {
+                      openAppSettings(); // 앱 설정으로 이동
+                    },
+                    child: Text('설정하기')),
+              ],
+            );
+          });
+      print("permission denied by user");
+      return false;
+    }
+    print("permission ok");
+    return true;
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
+    requestCameraPermission(context);
   }
 
   @override
@@ -51,53 +82,25 @@ class _WebviewState extends State<Webview> {
         return Future.value(false);
       },
       child: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Setting()),
-            );
-          },
-          child: Icon(
-            Icons.settings,
-            color: Colors.white,
-          ),
-        ),
-        // appBar: AppBar(
-        //   backgroundColor: Colors.white,
-        //   elevation: 0.0,
-        //   leading: IconButton(
-        //     onPressed: () {
-        //       Future future = _controller.canGoBack();
-        //       future.then((canGoBack) {
-        //         if (canGoBack) {
-        //           _controller.goBack();
-        //         } else {
-        //           print('fail');
-        //         }
-        //       });
-        //     },
-        //     icon: Icon(Icons.arrow_back),
-        //     color: Colors.black,
+        // floatingActionButton: FloatingActionButton(
+        //   onPressed: () {
+        //     Navigator.push(
+        //       context,
+        //       MaterialPageRoute(builder: (context) => Setting()),
+        //     );
+        //   },
+        //   child: Icon(
+        //     Icons.settings,
+        //     color: Colors.white,
         //   ),
-        //   actions: [
-        //     IconButton(
-        //       onPressed: () {
-        //         print('2222');
-        //       },
-        //       icon: Icon(Icons.settings),
-        //       color: Colors.black,
-        //     ),
-        //   ],
         // ),
         body: SafeArea(
-          child: WebView(
-            onWebViewCreated: (WebViewController webViewController) {
-              _controller = webViewController;
-            },
-            initialUrl:
-                'http://ec2-15-164-219-91.ap-northeast-2.compute.amazonaws.com:3000/',
-            javascriptMode: JavascriptMode.unrestricted,
+          child: WebviewScaffold(
+            url: 'http://ec2-15-164-219-91.ap-northeast-2.compute.amazonaws.com:3000/',
+            withJavascript: true,
+            withLocalStorage: true,
+
+
           ),
         ),
       ),
