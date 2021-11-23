@@ -99,8 +99,6 @@ class _WebviewState extends State<Webview> {
             url: 'http://ec2-15-164-219-91.ap-northeast-2.compute.amazonaws.com:3000/',
             withJavascript: true,
             withLocalStorage: true,
-
-
           ),
         ),
       ),
