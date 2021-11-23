@@ -39,6 +39,7 @@ dependencies:
   flutter_local_notifications: ^8.2.0
   permission_handler: ^8.3.0
   flutter_webview_plugin: ^0.4.0
+  get: ^4.3.8
 
 dev_dependencies:
   flutter_test:

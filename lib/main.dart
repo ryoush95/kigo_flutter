@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:get/get.dart';
 import 'Webview.dart';
 
 void main() {
@@ -11,7 +11,7 @@ class KigoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'KigoWebview',
       home: Webview(),
     );
