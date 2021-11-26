@@ -21,7 +21,7 @@
 
     <application
         android:icon="@mipmap/ic_launcher"
-        android:label="kigo_flutter"
+        android:label="KIGO"
         android:usesCleartextTraffic="true">
 
 
