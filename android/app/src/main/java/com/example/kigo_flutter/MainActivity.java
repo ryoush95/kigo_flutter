@@ -1,4 +1,4 @@
-package com.example.kigo_flutter;
+package com.sogeum.kigo_flutter;
 
 import io.flutter.embedding.android.FlutterActivity;
 
