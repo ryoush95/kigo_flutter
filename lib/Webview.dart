@@ -12,17 +12,17 @@ class Webview extends StatefulWidget {
 }
 
 class _WebviewState extends State<Webview> {
-  late WebViewController _controller;
+  final _controller = FlutterWebviewPlugin();
   var permissionState = false;
 
   Future<bool> requestCameraPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
     Map<Permission, PermissionStatus> statuses =
-    await [Permission.camera, Permission.storage].request();
+        await [Permission.camera, Permission.storage].request();
     // var status = await requestCameraPermission(context);
 
     if (statuses[Permission.camera]!.isGranted == false ||
-    statuses[Permission.storage]!.isGranted == false) {
+        statuses[Permission.storage]!.isGranted == false) {
       // 허용이 안된 경우
       showDialog(
           context: context,
@@ -62,21 +62,7 @@ class _WebviewState extends State<Webview> {
           if (canGoBack) {
             _controller.goBack();
           } else {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text("앱을 종료하시겠습니까?"),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () => SystemNavigator.pop(),
-                    child: Text("네"),
-                  ),
-                  TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: Text("아니요"))
-                ],
-              ),
-            );
+
           }
         });
         return Future.value(false);
@@ -95,10 +81,12 @@ class _WebviewState extends State<Webview> {
         //   ),
         // ),
         body: SafeArea(
-          child: WebviewScaffold(
-            url: 'http://ec2-15-164-219-91.ap-northeast-2.compute.amazonaws.com:3000/',
-            withJavascript: true,
-            withLocalStorage: true,
+          child: Container(
+            child: WebviewScaffold(
+              url:'http://ec2-15-164-219-91.ap-northeast-2.compute.amazonaws.com:3000/',
+              withJavascript: true,
+              withLocalStorage: true,
+            ),
           ),
         ),
       ),
