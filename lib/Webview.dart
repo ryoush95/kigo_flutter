@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:get/get.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class Webview extends StatefulWidget {
   const Webview({Key? key}) : super(key: key);
@@ -14,6 +16,7 @@ class Webview extends StatefulWidget {
 class _WebviewState extends State<Webview> {
   final _controller = FlutterWebviewPlugin();
   var permissionState = false;
+  DateTime backbuttonpressedTime = DateTime.now();
 
   Future<bool> requestCameraPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
@@ -53,20 +56,47 @@ class _WebviewState extends State<Webview> {
     requestCameraPermission(context);
   }
 
+  Future<bool> onWillPop() async {
+    DateTime currentTime = DateTime.now();
+
+    //Statement 1 Or statement2
+    bool backButton = currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
+
+    if (_controller.canGoBack == true) {
+      _controller.goBack();
+      print("else");
+      return false;
+    } else {
+      if (backButton) {
+        backbuttonpressedTime = currentTime;
+        Fluttertoast.showToast(
+            msg: "한번 더 누르시면 종료 됩니다",
+            backgroundColor: Colors.black,
+            textColor: Colors.white);
+        return false;
+      } else{
+        SystemNavigator.pop();
+        return true;
+      }
+
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () {
-        Future future = _controller.canGoBack();
-        future.then((canGoBack) {
-          if (canGoBack) {
-            _controller.goBack();
-          } else {
-
-          }
-        });
-        return Future.value(false);
-      },
+      // onWillPop: () {
+      //   Future future = _controller.canGoBack();
+      //   future.then((canGoBack) {
+      //     if (canGoBack) {
+      //       _controller.goBack();
+      //     } else {
+      //       showToast('한번 더 뒤로가기 클릭시 종료됩니다');
+      //     }
+      //   });
+      //   return Future.value(false);
+      // },
+      onWillPop: onWillPop,
       child: Scaffold(
         // floatingActionButton: FloatingActionButton(
         //   onPressed: () {
@@ -91,5 +121,9 @@ class _WebviewState extends State<Webview> {
         ),
       ),
     );
+  }
+
+  void showToast(String msg){
+    Fluttertoast.showToast(msg: msg, toastLength: Toast.LENGTH_SHORT);
   }
 }

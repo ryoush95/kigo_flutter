@@ -35,6 +35,7 @@
             android:showWhenLocked="true"
             android:theme="@style/LaunchTheme"
             android:turnScreenOn="true"
+            android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
