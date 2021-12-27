@@ -29,7 +29,7 @@ class _SettingState extends State<Setting> {
     _flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onSelectNotification: (String? payload) async {
       debugPrint("$payload");
-      showDialog(context: context, builder: (_) => MyWebview());
+      showDialog(context: context, builder: (_) => Webview());
     });
   }
 
