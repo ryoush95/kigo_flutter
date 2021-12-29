@@ -50,7 +50,6 @@ class _WebviewState extends State<Webview> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
     requestCameraPermission(context);
   }
 
@@ -88,6 +87,7 @@ class _WebviewState extends State<Webview> {
         body: SafeArea(
           child: Container(
             child: WebviewScaffold(
+              userAgent: 'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
               url:'http://ec2-52-79-226-91.ap-northeast-2.compute.amazonaws.com:3000/',
               withJavascript: true,
               withLocalStorage: true,
