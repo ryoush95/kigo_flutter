@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
@@ -13,7 +15,6 @@ class Webview extends StatefulWidget {
 
 class _WebviewState extends State<Webview> {
   final _controller = FlutterWebviewPlugin();
-  var permissionState = false;
   DateTime backbuttonpressedTime = DateTime.now();
 
   Future<bool> requestCameraPermission(BuildContext context) async {
@@ -25,20 +26,11 @@ class _WebviewState extends State<Webview> {
     if (statuses[Permission.camera]!.isGranted == false ||
         statuses[Permission.storage]!.isGranted == false) {
       // 허용이 안된 경우
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              content: Text("권한 설정을 확인해주세요."),
-              actions: [
-                ElevatedButton(
-                    onPressed: () {
-                      openAppSettings(); // 앱 설정으로 이동
-                    },
-                    child: Text('설정하기')),
-              ],
-            );
-          });
+      Fluttertoast.showToast(msg: '허용되지않은 권한이 있습니다.\n 설정에서 확인해주세요.',
+      toastLength: Toast.LENGTH_LONG);
+      if (Platform.isAndroid) {
+        openAppSettings();
+      }
       print("permission denied by user");
       return false;
     }
@@ -50,14 +42,17 @@ class _WebviewState extends State<Webview> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    requestCameraPermission(context);
+    if(Permission.camera.status.isGranted == false || Permission.storage.status.isGranted == false) {
+      requestCameraPermission(context);
+    }
   }
 
   Future<bool> onWillPop() async {
     DateTime currentTime = DateTime.now();
 
     //Statement 1 Or statement2
-    bool backButton = currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
+    bool backButton =
+        currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
 
     if (_controller.canGoBack == true) {
       _controller.goBack();
@@ -71,11 +66,10 @@ class _WebviewState extends State<Webview> {
             backgroundColor: Colors.black,
             textColor: Colors.white);
         return false;
-      } else{
+      } else {
         SystemNavigator.pop();
         return true;
       }
-
     }
   }
 
@@ -87,8 +81,10 @@ class _WebviewState extends State<Webview> {
         body: SafeArea(
           child: Container(
             child: WebviewScaffold(
-              userAgent: 'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
-              url:'http://ec2-52-79-226-91.ap-northeast-2.compute.amazonaws.com:3000/',
+              userAgent:
+                  'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
+              url:
+                  'http://ec2-52-79-226-91.ap-northeast-2.compute.amazonaws.com:3000/',
               withJavascript: true,
               withLocalStorage: true,
             ),
@@ -98,7 +94,7 @@ class _WebviewState extends State<Webview> {
     );
   }
 
-  void showToast(String msg){
+  void showToast(String msg) {
     Fluttertoast.showToast(msg: msg, toastLength: Toast.LENGTH_SHORT);
   }
 }
