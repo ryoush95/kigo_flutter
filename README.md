@@ -1,6 +1,6 @@
 # kigo_flutter
 
-A new Flutter project.
+kigo app
 
 ## Getting Started
 

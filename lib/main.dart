@@ -16,7 +16,7 @@ class KigoApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'KigoWebview',
       debugShowCheckedModeBanner: false,
-      home: Webview(),
+      home: Screen(),
     );
   }
 }
