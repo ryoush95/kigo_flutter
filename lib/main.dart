@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'Webview.dart';
 
-Future<void> main() async{
+Future<void> main() async {
   bool data = await fetchData();
 
   runApp(const KigoApp());
@@ -21,10 +21,10 @@ class KigoApp extends StatelessWidget {
   }
 }
 
-Future<bool> fetchData() async{
+Future<bool> fetchData() async {
   bool data = false;
 
-  await Future.delayed(Duration(seconds:3),(){
+  await Future.delayed(Duration(seconds: 3), () {
     data = true;
   });
 

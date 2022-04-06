@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -14,11 +15,13 @@ class Screen extends StatefulWidget {
 }
 
 class _ScreenState extends State<Screen> {
-  final _controller = FlutterWebviewPlugin();
+  InAppWebViewController? _controller;
+  bool onload = false;
   DateTime backbuttonpressedTime = DateTime.now();
-  final flutterPlugin = FlutterWebviewPlugin();
+
+  // final flutterPlugin = FlutterWebviewPlugin();
   final awsurl =
-      'http://ec2-3-38-225-77.ap-northeast-2.compute.amazonaws.com:3000/';
+      'http://ec2-15-164-169-144.ap-northeast-2.compute.amazonaws.com:3000/';
 
   Future<bool> requestCameraPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
@@ -50,91 +53,147 @@ class _ScreenState extends State<Screen> {
         Permission.storage.status.isGranted == false) {
       requestCameraPermission(context);
     }
-
-    flutterPlugin.launch(awsurl);
   }
 
   Future<bool> onWillPop() async {
-    DateTime currentTime = DateTime.now();
+    // DateTime currentTime = DateTime.now();
 
     //Statement 1 Or statement2
-    bool backButton =
-        currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
+    // bool backButton =
+    //     currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
 
-    if (_controller.canGoBack == true) {
-      _controller.goBack();
+    print(_controller!.canGoBack);
+    if (await _controller!.canGoBack()) {
+      _controller!.goBack();
       print("else");
       return false;
     } else {
-      if (backButton) {
-        backbuttonpressedTime = currentTime;
-        Fluttertoast.showToast(
-            msg: "한번 더 누르시면 종료 됩니다",
-            backgroundColor: Colors.black,
-            textColor: Colors.white);
-        return false;
-      } else {
-        SystemNavigator.pop();
-        return true;
-      }
+      //   if (backButton) {
+      //     backbuttonpressedTime = currentTime;
+      //     Fluttertoast.showToast(
+      //         msg: "한번 더 누르시면 종료 됩니다",
+      //         backgroundColor: Colors.black,
+      //         textColor: Colors.white);
+      //     return false;
+      //   } else {
+      //     SystemNavigator.pop();
+      //     return true;
+      //   }
+      // }
+      bool exit = false;
+      await Get.dialog(
+        AlertDialog(
+          content: Text('앱 종료?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                exit = true;
+                SystemNavigator.pop();
+              },
+              child: Text('네'),
+            ),
+            TextButton(
+              onPressed: () {
+                exit = false;
+                Get.back();
+              },
+              child: Text('cancel'),
+            ),
+          ],
+        ),
+      );
+      return exit;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            _controller.goBack();
-          },
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-          ),
-        ),
-        centerTitle: true,
-        title: Text(
-          'KIGO',
-          style: TextStyle(
-            color: Colors.black,
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       body: WillPopScope(
         onWillPop: onWillPop,
         child: SafeArea(
-          child: Container(
-            child: WebviewScaffold(
-              userAgent:
-                  'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
-              url: awsurl,
-              withJavascript: true,
-              withLocalStorage: true,
-              scrollBar: false,
-              withZoom: true,
-            ),
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                      child: InAppWebView(
+                    initialUrlRequest: URLRequest(
+                      url: Uri.parse(awsurl),
+                    ),
+                    onWebViewCreated: (controller) {
+                      _controller ??= controller;
+                    },
+                    initialOptions: InAppWebViewGroupOptions(
+                      crossPlatform: InAppWebViewOptions(
+                        javaScriptEnabled: true,
+                        clearCache: false,
+                        mediaPlaybackRequiresUserGesture: false,
+                        useShouldOverrideUrlLoading: true,
+                        useOnDownloadStart: true,
+                      ),
+                      android: AndroidInAppWebViewOptions(
+                        useHybridComposition: true,
+                      ),
+                      ios: IOSInAppWebViewOptions(
+                        allowsInlineMediaPlayback: true,
+                      ),
+                    ),
+                    onLoadStart: (con, url) async {
+                      setState(() {
+                        onload = true;
+                      });
+                    },
+                    onLoadStop: (con, url) async {
+                      setState(() {
+                        onload = false;
+                      });
+                    },
+                  )),
+
+                  // bottom(),
+                ],
+              ),
+              Visibility(
+                visible: onload,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                  ),
+                ),
+              )
+            ],
           ),
         ),
       ),
     );
   }
 
-  AppBar? backb() {
+  SizedBox bottom() {
     if (Platform.isIOS) {
-      return AppBar(
-        leading: IconButton(
-          onPressed: () {
-            _controller.goBack();
-          },
-          icon: Icon(Icons.arrow_back),
+      return SizedBox(
+        height: 50.0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                onWillPop();
+              },
+            ),
+            // IconButton(
+            //   icon: Icon(Icons.arrow_forward),
+            //   onPressed: () {
+            //     controller.goForward();
+            //   },
+            // ),
+          ],
         ),
-        backgroundColor: Colors.transparent,
       );
-    } else
-      return null;
+    } else {
+      return SizedBox();
+    }
   }
 
   void showToast(String msg) {
