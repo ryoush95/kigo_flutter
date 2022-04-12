@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
+import 'package:kigo_flutter/key.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -17,11 +19,29 @@ class Screen extends StatefulWidget {
 class _ScreenState extends State<Screen> {
   InAppWebViewController? _controller;
   bool onload = false;
-  DateTime backbuttonpressedTime = DateTime.now();
+  final awsurl = key.url;
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  // final flutterPlugin = FlutterWebviewPlugin();
-  final awsurl =
-      'http://ec2-15-164-169-144.ap-northeast-2.compute.amazonaws.com:3000/';
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    if (Permission.camera.status.isGranted == false ||
+        Permission.storage.status.isGranted == false) {
+      requestCameraPermission(context);
+    }
+
+    getToken();
+  }
+
+  void getToken() async{
+    String? t = await messaging.getToken();
+    print(t);
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      print(message.notification?.title);
+      print(message.notification?.body);
+    });
+  }
 
   Future<bool> requestCameraPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
@@ -42,44 +62,19 @@ class _ScreenState extends State<Screen> {
       return false;
     }
     print("permission ok");
+
     return true;
   }
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    if (Permission.camera.status.isGranted == false ||
-        Permission.storage.status.isGranted == false) {
-      requestCameraPermission(context);
-    }
-  }
+
 
   Future<bool> onWillPop() async {
-    // DateTime currentTime = DateTime.now();
-
-    //Statement 1 Or statement2
-    // bool backButton =
-    //     currentTime.difference(backbuttonpressedTime) > Duration(seconds: 3);
-
     print(_controller!.canGoBack);
     if (await _controller!.canGoBack()) {
       _controller!.goBack();
       print("else");
       return false;
     } else {
-      //   if (backButton) {
-      //     backbuttonpressedTime = currentTime;
-      //     Fluttertoast.showToast(
-      //         msg: "한번 더 누르시면 종료 됩니다",
-      //         backgroundColor: Colors.black,
-      //         textColor: Colors.white);
-      //     return false;
-      //   } else {
-      //     SystemNavigator.pop();
-      //     return true;
-      //   }
-      // }
       bool exit = false;
       await Get.dialog(
         AlertDialog(
@@ -123,6 +118,11 @@ class _ScreenState extends State<Screen> {
                     ),
                     onWebViewCreated: (controller) {
                       _controller ??= controller;
+                      controller.addJavaScriptHandler(handlerName: 'JavaScriptHandler',
+                          callback: (args) async {
+                        print(args);
+                        // return
+                          });
                     },
                     initialOptions: InAppWebViewGroupOptions(
                       crossPlatform: InAppWebViewOptions(
@@ -150,8 +150,7 @@ class _ScreenState extends State<Screen> {
                       });
                     },
                   )),
-
-                  // bottom(),
+                  bottom(),
                 ],
               ),
               Visibility(
@@ -196,7 +195,5 @@ class _ScreenState extends State<Screen> {
     }
   }
 
-  void showToast(String msg) {
-    Fluttertoast.showToast(msg: msg, toastLength: Toast.LENGTH_SHORT);
-  }
+
 }
