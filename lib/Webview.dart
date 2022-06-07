@@ -4,8 +4,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:kigo_flutter/key.dart';
+import 'package:kigo_flutter/bokkey.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -18,7 +19,7 @@ class Screen extends StatefulWidget {
 
 class _ScreenState extends State<Screen> {
   InAppWebViewController? _controller;
-  bool onload = false;
+  bool onLoad = false;
   final awsurl = key.url;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -31,15 +32,62 @@ class _ScreenState extends State<Screen> {
       requestCameraPermission(context);
     }
 
-    getToken();
+    getForeground();
   }
 
-  void getToken() async{
+  void getForeground() async {
     String? t = await messaging.getToken();
     print(t);
+
+    await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: true,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+        alert: false, // Required to display a heads up notification
+        badge: true,
+        sound: false,
+      );
+    }
+
+    const AndroidNotificationChannel androidNotificationChannel =
+        AndroidNotificationChannel(
+      'high_importance_channel', // 임의의 id
+      'High Importance Notifications', // 설정에 보일 채널명
+      description:
+          'This channel is used for important notifications.', // 설정에 보일 채널 설명
+      importance: Importance.max,
+    );
+
+    // Notification Channel을 디바이스에 생성
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidNotificationChannel);
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print(message.notification?.title);
-      print(message.notification?.body);
+      Get.dialog(AlertDialog(
+        title: Text(message.notification!.title!),
+        content: Text(message.notification!.body!),
+        actions: [
+          TextButton(
+              onPressed: () {
+                Get.back();
+              },
+              child: Text('ok'))
+        ],
+      ));
     });
   }
 
@@ -66,8 +114,6 @@ class _ScreenState extends State<Screen> {
     return true;
   }
 
-
-
   Future<bool> onWillPop() async {
     print(_controller!.canGoBack);
     if (await _controller!.canGoBack()) {
@@ -92,7 +138,7 @@ class _ScreenState extends State<Screen> {
                 exit = false;
                 Get.back();
               },
-              child: Text('cancel'),
+              child: Text('아니오'),
             ),
           ],
         ),
@@ -118,11 +164,13 @@ class _ScreenState extends State<Screen> {
                     ),
                     onWebViewCreated: (controller) {
                       _controller ??= controller;
-                      controller.addJavaScriptHandler(handlerName: 'JavaScriptHandler',
-                          callback: (args) async {
-                        print(args);
-                        // return
-                          });
+                      controller.addJavaScriptHandler(
+                        handlerName: 'JavaScriptHandler',
+                        callback: (args) async {
+                          print(args);
+                          // return
+                        },
+                      );
                     },
                     initialOptions: InAppWebViewGroupOptions(
                       crossPlatform: InAppWebViewOptions(
@@ -141,20 +189,20 @@ class _ScreenState extends State<Screen> {
                     ),
                     onLoadStart: (con, url) async {
                       setState(() {
-                        onload = true;
+                        onLoad = true;
                       });
                     },
                     onLoadStop: (con, url) async {
                       setState(() {
-                        onload = false;
+                        onLoad = false;
                       });
                     },
                   )),
-                  bottom(),
+                  // bottom(),
                 ],
               ),
               Visibility(
-                visible: onload,
+                visible: onLoad,
                 child: const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
@@ -167,33 +215,5 @@ class _ScreenState extends State<Screen> {
       ),
     );
   }
-
-  SizedBox bottom() {
-    if (Platform.isIOS) {
-      return SizedBox(
-        height: 50.0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                onWillPop();
-              },
-            ),
-            // IconButton(
-            //   icon: Icon(Icons.arrow_forward),
-            //   onPressed: () {
-            //     controller.goForward();
-            //   },
-            // ),
-          ],
-        ),
-      );
-    } else {
-      return SizedBox();
-    }
-  }
-
 
 }
