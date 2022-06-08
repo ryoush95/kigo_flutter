@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -19,7 +20,7 @@ class Screen extends StatefulWidget {
 
 class _ScreenState extends State<Screen> {
   InAppWebViewController? _controller;
-  bool onLoad = false;
+  bool _onLoad = true;
   final awsurl = key.url;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -58,22 +59,22 @@ class _ScreenState extends State<Screen> {
       );
     }
 
-    const AndroidNotificationChannel androidNotificationChannel =
-        AndroidNotificationChannel(
-      'high_importance_channel', // 임의의 id
-      'High Importance Notifications', // 설정에 보일 채널명
-      description:
-          'This channel is used for important notifications.', // 설정에 보일 채널 설명
-      importance: Importance.max,
-    );
-
-    // Notification Channel을 디바이스에 생성
-    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(androidNotificationChannel);
+    // const AndroidNotificationChannel androidNotificationChannel =
+    //     AndroidNotificationChannel(
+    //   'high_importance_channel', // 임의의 id
+    //   'High Importance Notifications', // 설정에 보일 채널명
+    //   description:
+    //       'This channel is used for important notifications.', // 설정에 보일 채널 설명
+    //   importance: Importance.max,
+    // );
+    //
+    // // Notification Channel을 디바이스에 생성
+    // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    //     FlutterLocalNotificationsPlugin();
+    // await flutterLocalNotificationsPlugin
+    //     .resolvePlatformSpecificImplementation<
+    //         AndroidFlutterLocalNotificationsPlugin>()
+    //     ?.createNotificationChannel(androidNotificationChannel);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print(message.notification?.title);
@@ -85,9 +86,37 @@ class _ScreenState extends State<Screen> {
               onPressed: () {
                 Get.back();
               },
-              child: Text('ok'))
+              child: const Text('취소')),
+          TextButton(
+              onPressed: () {
+                String? url = message.data['url'];
+                if(url != null) {
+                  _controller!.loadUrl(
+                      urlRequest: URLRequest(url: Uri.parse(url)));
+                }
+                Get.back();
+              },
+              child: const Text('확인'))
         ],
       ));
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      // String url = message.data['url'];
+      String url = key.urladmin;
+      Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+        if (_controller != null) {
+          print('Background Push webview not null');
+          if (_onLoad) {
+            print('Background Push webview stopLoading');
+            await _controller?.stopLoading();
+          }
+          print('Background Push webview loadUrl');
+          _controller?.loadUrl(
+              urlRequest: URLRequest(url: Uri.parse(url)));
+          timer.cancel();
+        }
+      });
     });
   }
 
@@ -124,21 +153,21 @@ class _ScreenState extends State<Screen> {
       bool exit = false;
       await Get.dialog(
         AlertDialog(
-          content: Text('앱 종료?'),
+          content: const Text('앱 종료?'),
           actions: [
             TextButton(
               onPressed: () {
                 exit = true;
                 SystemNavigator.pop();
               },
-              child: Text('네'),
+              child: const Text('네'),
             ),
             TextButton(
               onPressed: () {
                 exit = false;
                 Get.back();
               },
-              child: Text('아니오'),
+              child: const Text('아니오'),
             ),
           ],
         ),
@@ -189,12 +218,12 @@ class _ScreenState extends State<Screen> {
                     ),
                     onLoadStart: (con, url) async {
                       setState(() {
-                        onLoad = true;
+                        _onLoad = true;
                       });
                     },
                     onLoadStop: (con, url) async {
                       setState(() {
-                        onLoad = false;
+                        _onLoad = false;
                       });
                     },
                   )),
@@ -202,7 +231,7 @@ class _ScreenState extends State<Screen> {
                 ],
               ),
               Visibility(
-                visible: onLoad,
+                visible: _onLoad,
                 child: const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
