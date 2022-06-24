@@ -5,9 +5,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:kigo_flutter/bokkey.dart';
+import 'package:kigo_flutter/config.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
@@ -32,11 +31,11 @@ class _ScreenState extends State<Screen> {
         Permission.storage.status.isGranted == false) {
       requestCameraPermission(context);
     }
-
-    getForeground();
+    getNotification();
   }
 
-  void getForeground() async {
+  //알림설정
+  void getNotification() async {
     String? t = await messaging.getToken();
     print(t);
 
@@ -83,27 +82,27 @@ class _ScreenState extends State<Screen> {
         content: Text(message.notification!.body!),
         actions: [
           TextButton(
-              onPressed: () {
-                Get.back();
-              },
-              child: const Text('취소')),
+            onPressed: () {
+              Get.back();
+            },
+            child: const Text('취소'),
+          ),
           TextButton(
-              onPressed: () {
-                String? url = message.data['url'];
-                if(url != null) {
-                  _controller!.loadUrl(
-                      urlRequest: URLRequest(url: Uri.parse(url)));
-                }
-                Get.back();
-              },
-              child: const Text('확인'))
+            onPressed: () {
+              // String? url = message.data['url'];
+              String? url = key.urlnoti;
+              _controller!.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+              Get.back();
+            },
+            child: const Text('확인'),
+          ),
         ],
       ));
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       // String url = message.data['url'];
-      String url = key.urladmin;
+      String url = key.urlnoti;
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         if (_controller != null) {
           print('Background Push webview not null');
@@ -112,13 +111,12 @@ class _ScreenState extends State<Screen> {
             await _controller?.stopLoading();
           }
           print('Background Push webview loadUrl');
-          _controller?.loadUrl(
-              urlRequest: URLRequest(url: Uri.parse(url)));
+          _controller?.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
           timer.cancel();
         }
       });
     });
-  }
+  } // getNotification
 
   Future<bool> requestCameraPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
@@ -194,20 +192,22 @@ class _ScreenState extends State<Screen> {
                     onWebViewCreated: (controller) {
                       _controller ??= controller;
                       controller.addJavaScriptHandler(
-                        handlerName: 'JavaScriptHandler',
-                        callback: (args) async {
-                          print(args);
-                          // return
-                        },
-                      );
+                          handlerName: 'JavaScriptHandler',
+                          callback: (args) async {
+                            print(args);
+                            // return
+                          });
                     },
                     initialOptions: InAppWebViewGroupOptions(
                       crossPlatform: InAppWebViewOptions(
                         javaScriptEnabled: true,
                         clearCache: false,
+                        cacheEnabled: true,
                         mediaPlaybackRequiresUserGesture: false,
                         useShouldOverrideUrlLoading: true,
                         useOnDownloadStart: true,
+                        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) FlutterInAppWebView/5.3.2',
+                        // useOnLoadResource: true,
                       ),
                       android: AndroidInAppWebViewOptions(
                         useHybridComposition: true,
@@ -227,7 +227,6 @@ class _ScreenState extends State<Screen> {
                       });
                     },
                   )),
-                  // bottom(),
                 ],
               ),
               Visibility(
@@ -244,5 +243,4 @@ class _ScreenState extends State<Screen> {
       ),
     );
   }
-
 }
