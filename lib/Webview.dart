@@ -19,7 +19,7 @@ class Screen extends StatefulWidget {
 
 class _ScreenState extends State<Screen> {
   InAppWebViewController? _controller;
-  bool _onLoad = true;
+  bool _onLoading = true;
   final awsurl = key.url;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -58,6 +58,7 @@ class _ScreenState extends State<Screen> {
       );
     }
 
+    // local notification
     // const AndroidNotificationChannel androidNotificationChannel =
     //     AndroidNotificationChannel(
     //   'high_importance_channel', // 임의의 id
@@ -106,7 +107,7 @@ class _ScreenState extends State<Screen> {
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         if (_controller != null) {
           print('Background Push webview not null');
-          if (_onLoad) {
+          if (_onLoading) {
             print('Background Push webview stopLoading');
             await _controller?.stopLoading();
           }
@@ -139,7 +140,7 @@ class _ScreenState extends State<Screen> {
     print("permission ok");
 
     return true;
-  }
+  } //requestCameraPermission
 
   Future<bool> onWillPop() async {
     print(_controller!.canGoBack);
@@ -168,11 +169,56 @@ class _ScreenState extends State<Screen> {
               child: const Text('아니오'),
             ),
           ],
-        ),
-      );
+        ));
       return exit;
     }
-  }
+  } // onWillPop
+
+  Widget getWebview() {
+    return InAppWebView(
+      initialUrlRequest: URLRequest(
+        url: Uri.parse(awsurl),
+      ),
+      onWebViewCreated: (controller) {
+        _controller ??= controller;
+        controller.addJavaScriptHandler(
+            handlerName: 'JavaScriptHandler',
+            callback: (args) async {
+              print(args);
+              // return
+            });
+      },
+      initialOptions: InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
+          javaScriptEnabled: true,
+          clearCache: false,
+          cacheEnabled: true,
+          mediaPlaybackRequiresUserGesture: false,
+          useShouldOverrideUrlLoading: true,
+          useOnDownloadStart: true,
+          userAgent: 'random',
+          useOnLoadResource: true,
+        ),
+        android: AndroidInAppWebViewOptions(
+          useHybridComposition: true,
+        ),
+        ios: IOSInAppWebViewOptions(
+          allowsInlineMediaPlayback: true,
+        ),
+      ),
+      onLoadStart: (con, url) async {
+        print(url);
+        setState(() {
+          _onLoading = true;
+        });
+      },
+      onLoadStop: (con, url) async {
+        setState(() {
+          _onLoading = false;
+        });
+      },
+    );
+  } // getWebview
 
   @override
   Widget build(BuildContext context) {
@@ -184,53 +230,14 @@ class _ScreenState extends State<Screen> {
             children: [
               Column(
                 children: [
-                  Expanded(
-                      child: InAppWebView(
-                    initialUrlRequest: URLRequest(
-                      url: Uri.parse(awsurl),
-                    ),
-                    onWebViewCreated: (controller) {
-                      _controller ??= controller;
-                      controller.addJavaScriptHandler(
-                          handlerName: 'JavaScriptHandler',
-                          callback: (args) async {
-                            print(args);
-                            // return
-                          });
-                    },
-                    initialOptions: InAppWebViewGroupOptions(
-                      crossPlatform: InAppWebViewOptions(
-                        javaScriptEnabled: true,
-                        clearCache: false,
-                        cacheEnabled: true,
-                        mediaPlaybackRequiresUserGesture: false,
-                        useShouldOverrideUrlLoading: true,
-                        useOnDownloadStart: true,
-                        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) FlutterInAppWebView/5.3.2',
-                        // useOnLoadResource: true,
-                      ),
-                      android: AndroidInAppWebViewOptions(
-                        useHybridComposition: true,
-                      ),
-                      ios: IOSInAppWebViewOptions(
-                        allowsInlineMediaPlayback: true,
-                      ),
-                    ),
-                    onLoadStart: (con, url) async {
-                      setState(() {
-                        _onLoad = true;
-                      });
-                    },
-                    onLoadStop: (con, url) async {
-                      setState(() {
-                        _onLoad = false;
-                      });
-                    },
-                  )),
+                  Expanded(child: getWebview()),
+                  ElevatedButton(onPressed: (){
+
+                  }, child: Text('aaa'))
                 ],
               ),
               Visibility(
-                visible: _onLoad,
+                visible: _onLoading,
                 child: const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
