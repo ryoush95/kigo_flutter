@@ -39,7 +39,8 @@ dependencies:
   permission_handler: ^8.3.0
   flutter_inappwebview: ^5.4.3
   get: ^4.6.1
-  flutter_native_splash: ^1.3.1
+  get_storage: ^2.0.3
+  flutter_native_splash: ^2.1.6
   fluttertoast: ^8.0.8
   firebase_core: ^1.11.0
   firebase_messaging: ^11.2.4
@@ -68,7 +69,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - images/
+    - images/kigosplash.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

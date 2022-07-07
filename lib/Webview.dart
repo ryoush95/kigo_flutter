@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:kigo_flutter/config.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class Screen extends StatefulWidget {
   const Screen({Key? key}) : super(key: key);
@@ -20,18 +22,23 @@ class Screen extends StatefulWidget {
 class _ScreenState extends State<Screen> {
   InAppWebViewController? _controller;
   bool _onLoading = true;
-  final awsurl = key.url;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    splash();
     if (Permission.camera.status.isGranted == false ||
         Permission.storage.status.isGranted == false) {
       requestCameraPermission(context);
     }
     getNotification();
+  }
+
+  void splash() async {
+    await Future.delayed(const Duration(seconds: 3));
+    FlutterNativeSplash.remove();
   }
 
   //알림설정
@@ -150,26 +157,26 @@ class _ScreenState extends State<Screen> {
       return false;
     } else {
       bool exit = false;
-      await Get.dialog(
-        AlertDialog(
-          content: const Text('앱 종료?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                exit = true;
-                SystemNavigator.pop();
-              },
-              child: const Text('네'),
-            ),
-            TextButton(
-              onPressed: () {
-                exit = false;
-                Get.back();
-              },
-              child: const Text('아니오'),
-            ),
-          ],
-        ));
+      await Get.dialog(AlertDialog(
+        title: const Text('앱 종료'),
+        content: const Text('앱을 종료 하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              exit = true;
+              SystemNavigator.pop();
+            },
+            child: const Text('네'),
+          ),
+          TextButton(
+            onPressed: () {
+              exit = false;
+              Get.back();
+            },
+            child: const Text('아니오'),
+          ),
+        ],
+      ));
       return exit;
     }
   } // onWillPop
@@ -177,15 +184,19 @@ class _ScreenState extends State<Screen> {
   Widget getWebview() {
     return InAppWebView(
       initialUrlRequest: URLRequest(
-        url: Uri.parse(awsurl),
+        url: Uri.parse(_makeInitialUrl()),
       ),
       onWebViewCreated: (controller) {
         _controller ??= controller;
         controller.addJavaScriptHandler(
-            handlerName: 'JavaScriptHandler',
+            handlerName: 'webviewJavaScriptHandler',
             callback: (args) async {
-              print(args);
-              // return
+              if (args[0] == 'setUserId') {
+                String userId = args[1]['userId'];
+                GetStorage().write('userId', userId);
+                print('@addJavaScriptHandler userId $userId');
+                return await _getPushToken();
+              }
             });
       },
       initialOptions: InAppWebViewGroupOptions(
@@ -196,7 +207,7 @@ class _ScreenState extends State<Screen> {
           mediaPlaybackRequiresUserGesture: false,
           useShouldOverrideUrlLoading: true,
           useOnDownloadStart: true,
-          userAgent: 'random',
+          userAgent: 'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
           useOnLoadResource: true,
         ),
         android: AndroidInAppWebViewOptions(
@@ -231,9 +242,6 @@ class _ScreenState extends State<Screen> {
               Column(
                 children: [
                   Expanded(child: getWebview()),
-                  ElevatedButton(onPressed: (){
-
-                  }, child: Text('aaa'))
                 ],
               ),
               Visibility(
@@ -249,5 +257,34 @@ class _ScreenState extends State<Screen> {
         ),
       ),
     );
+  }
+
+  Future<String?> _getPushToken() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+    print('User granted permission: ${settings.authorizationStatus}');
+    String? token = await messaging.getToken();
+    print("토큰 : $token");
+    return token;
+  }
+
+  String _makeInitialUrl() {
+    String? userId = GetStorage().read('userId');
+    print('@userId $userId');
+    if (userId != null && userId.isNotEmpty) {
+      print('@userId AAA');
+      return '${key.url}/bbs/autoLogin.php?t=${DateTime.now().millisecondsSinceEpoch}&userId=$userId';
+    } else {
+      print('@userId BBB');
+      return '${key.url}/?t=${DateTime.now().millisecondsSinceEpoch}';
+    }
   }
 }
