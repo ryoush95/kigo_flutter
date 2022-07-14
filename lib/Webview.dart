@@ -29,62 +29,25 @@ class _ScreenState extends State<Screen> {
     // TODO: implement initState
     super.initState();
     splash();
-    if (Permission.camera.status.isGranted == false ||
-        Permission.storage.status.isGranted == false) {
-      requestCameraPermission(context);
+    if (Permission.storage.status.isGranted == false) {
+      requestPermission(context);
     }
     getNotification();
   }
 
   void splash() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
     FlutterNativeSplash.remove();
   }
 
   //알림설정
   void getNotification() async {
-    String? t = await messaging.getToken();
-    print(t);
-
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      announcement: true,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    if (Platform.isIOS) {
-      await FirebaseMessaging.instance
-          .setForegroundNotificationPresentationOptions(
-        alert: false, // Required to display a heads up notification
-        badge: true,
-        sound: false,
-      );
-    }
-
-    // local notification
-    // const AndroidNotificationChannel androidNotificationChannel =
-    //     AndroidNotificationChannel(
-    //   'high_importance_channel', // 임의의 id
-    //   'High Importance Notifications', // 설정에 보일 채널명
-    //   description:
-    //       'This channel is used for important notifications.', // 설정에 보일 채널 설명
-    //   importance: Importance.max,
-    // );
-    //
-    // // Notification Channel을 디바이스에 생성
-    // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    //     FlutterLocalNotificationsPlugin();
-    // await flutterLocalNotificationsPlugin
-    //     .resolvePlatformSpecificImplementation<
-    //         AndroidFlutterLocalNotificationsPlugin>()
-    //     ?.createNotificationChannel(androidNotificationChannel);
+    // String? t = await messaging.getToken();
+    // print(t);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print(message.notification?.title);
+      print("${message.data['url']}1111111111111111111111");
       Get.dialog(AlertDialog(
         title: Text(message.notification!.title!),
         content: Text(message.notification!.body!),
@@ -97,9 +60,11 @@ class _ScreenState extends State<Screen> {
           ),
           TextButton(
             onPressed: () {
-              // String? url = message.data['url'];
-              String? url = key.urlnoti;
-              _controller!.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+              String? url = message.data['url'];
+
+              url!.isNotEmpty?
+              _controller!.loadUrl(urlRequest: URLRequest(url: Uri.parse(url))):
+              _controller!.loadUrl(urlRequest: URLRequest(url: Uri.parse(key.homeUrl)));
               Get.back();
             },
             child: const Text('확인'),
@@ -110,7 +75,6 @@ class _ScreenState extends State<Screen> {
 
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
       // String url = message.data['url'];
-      String url = key.urlnoti;
       Timer.periodic(const Duration(milliseconds: 500), (timer) async {
         if (_controller != null) {
           print('Background Push webview not null');
@@ -119,20 +83,19 @@ class _ScreenState extends State<Screen> {
             await _controller?.stopLoading();
           }
           print('Background Push webview loadUrl');
-          _controller?.loadUrl(urlRequest: URLRequest(url: Uri.parse(url)));
+          _controller?.loadUrl(urlRequest: URLRequest(url: Uri.parse(key.homeUrl)));
           timer.cancel();
         }
       });
     });
   } // getNotification
 
-  Future<bool> requestCameraPermission(BuildContext context) async {
+  Future<bool> requestPermission(BuildContext context) async {
     // PermissionStatus status = await Permission.storage.request();
     Map<Permission, PermissionStatus> statuses =
-        await [Permission.camera, Permission.storage].request();
-    // var status = await requestCameraPermission(context);
+        await [Permission.storage].request();
 
-    if (statuses[Permission.camera]!.isGranted == false ||
+    if (
         statuses[Permission.storage]!.isGranted == false) {
       // 허용이 안된 경우
       Fluttertoast.showToast(
@@ -147,7 +110,7 @@ class _ScreenState extends State<Screen> {
     print("permission ok");
 
     return true;
-  } //requestCameraPermission
+  } //requestPermission
 
   Future<bool> onWillPop() async {
     print(_controller!.canGoBack);
@@ -207,7 +170,8 @@ class _ScreenState extends State<Screen> {
           mediaPlaybackRequiresUserGesture: false,
           useShouldOverrideUrlLoading: true,
           useOnDownloadStart: true,
-          userAgent: 'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
+          userAgent:
+              'Mozilla/5.0 AppleWebKit/535.19 Chrome/56.0.0 Mobile Safari/535.19',
           useOnLoadResource: true,
         ),
         android: AndroidInAppWebViewOptions(
@@ -281,10 +245,10 @@ class _ScreenState extends State<Screen> {
     print('@userId $userId');
     if (userId != null && userId.isNotEmpty) {
       print('@userId AAA');
-      return '${key.url}/bbs/autoLogin.php?t=${DateTime.now().millisecondsSinceEpoch}&userId=$userId';
+      return '${key.homeUrl}/bbs/autoLogin.php?t=${DateTime.now().millisecondsSinceEpoch}&userId=$userId';
     } else {
       print('@userId BBB');
-      return '${key.url}/?t=${DateTime.now().millisecondsSinceEpoch}';
+      return '${key.homeUrl}/?t=${DateTime.now().millisecondsSinceEpoch}';
     }
   }
 }

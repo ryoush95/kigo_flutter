@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -12,6 +15,26 @@ Future<void> main() async {
   await Firebase.initializeApp();
   await GetStorage.init();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    announcement: true,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
+  if (Platform.isIOS) {
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: false, // Required to display a heads up notification
+      badge: true,
+      sound: false,
+    );
+  }
+
   runApp(const KigoApp());
 }
 
