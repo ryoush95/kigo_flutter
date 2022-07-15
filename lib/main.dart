@@ -1,56 +1,106 @@
 import 'dart:io';
 
+import 'package:kigo_flutter/module/config.dart';
+import 'package:kigo_flutter/page/home_page.dart';
+import 'package:kigo_flutter/module/page_event_connector.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-import 'Webview.dart';
-
-Future<void> main() async {
-  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
+  if (Platform.isAndroid) {
+    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+  }
   await GetStorage.init();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
+  // Firebase
+  await Firebase.initializeApp();
   await FirebaseMessaging.instance.requestPermission(
     alert: true,
     announcement: true,
     badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
+    carPlay: true,
+    criticalAlert: true,
+    provisional: true,
+    sound: false,
   );
 
-  if (Platform.isIOS) {
+  if(Platform.isIOS) {
     await FirebaseMessaging.instance
         .setForegroundNotificationPresentationOptions(
       alert: false, // Required to display a heads up notification
       badge: true,
-      sound: false,
+      sound: true,
     );
   }
 
-  runApp(const KigoApp());
+  runApp(const MyApp());
 }
 
-class KigoApp extends StatelessWidget {
-  const KigoApp({Key? key}) : super(key: key);
+Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {
+  print("Handling a background message: ${message.notification?.title}");
+}
 
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // _addFirebaseMessageListener();
-    //세로 고정
+    _addFirebaseMessageListener();
+    // 세로 위쪽 방향 고정
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
     return GetMaterialApp(
-      title: 'Kigo',
+      title: 'kigo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: HomePage(),
       debugShowCheckedModeBanner: false,
-      home: Screen(),
+    );
+  }
+
+  void _addFirebaseMessageListener() async {
+    // 종료, 비활성 상태일 때 푸시가 "도착"하면 실행됨.
+    //FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
+
+    // 종료 상태에서, 푸시 알림을 "클릭"하면 실행됨.
+    RemoteMessage? message =
+    await FirebaseMessaging.instance.getInitialMessage();
+    if (message != null) {
+      PageEventConnector().onBackgroundFirebaseMessage(
+        message.notification?.title,
+        message.notification?.body,
+        message.data['url']??Config.homeUrl,
+      );
+    }
+
+    // 활성, 비활성 상태에서, 푸시 알림을 "클릭"하면 실행됨.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      PageEventConnector().onBackgroundFirebaseMessage(
+        message.notification?.title,
+        message.notification?.body,
+        message.data['url']??Config.homeUrl,
+      );
+    });
+
+    // 활성 상태일 때 푸시가 "도착"하면 실행됨.
+    FirebaseMessaging.onMessage.listen(
+          (RemoteMessage message) async {
+        PageEventConnector().onForegroundFirebaseMessage(
+          message.notification?.title,
+          message.notification?.body,
+          message.data['url']??Config.homeUrl,
+        );
+      },
     );
   }
 }
